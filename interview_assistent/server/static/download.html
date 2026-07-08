@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Download Client</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body class="login-page">
+  <main class="login-card">
+    <h1>Download laptop client</h1>
+    <p class="subtitle">Install on your exam laptop once. Use your license URL on phone.</p>
+
+    <section class="panel">
+      <h2>Linux</h2>
+      <pre class="code-block">curl -fsSL https://raw.githubusercontent.com/linaelmarzouki-etu-dev/interview-screen/main/install-linux-client.sh | bash</pre>
+      <p class="muted">Then run: <code>~/interview-screen-client/start-laptop-client.sh</code></p>
+    </section>
+
+    <section class="panel">
+      <h2>Windows</h2>
+      <p>Download and run <code>install-windows-client.bat</code> from GitHub, then run <code>start-laptop-client.bat</code>.</p>
+      <p><a href="https://github.com/linaelmarzouki-etu-dev/interview-screen/archive/refs/heads/main.zip">Download ZIP (Windows)</a></p>
+    </section>
+
+    <section class="panel">
+      <h2>Phone (your license link)</h2>
+      <p class="muted">You receive a personal URL like:</p>
+      <pre class="code-block" id="sample-url">http://server:8765/u/ABCDEFGH</pre>
+      <p class="muted">Open it on your phone → auto login → tap Grab laptop screen.</p>
+    </section>
+  </main>
+  <script>
+    fetch("/api/info").then((r) => r.json()).then((info) => {
+      const base = info.companion_url || location.origin;
+      document.getElementById("sample-url").textContent = `${base}/u/ABCDEFGH`;
+    }).catch(() => {});
+  </script>
+</body>
+</html>

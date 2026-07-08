@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>MCQ Companion</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <div>
+      <h1>MCQ Companion</h1>
+      <p class="subtitle">Upload or paste a question screenshot — view answers on phone or second monitor</p>
+    </div>
+    <div class="header-meta">
+      <div id="license-pill" class="pill license hidden"></div>
+      <div id="status-pill" class="pill idle">Idle</div>
+    </div>
+  </header>
+
+  <section class="controls mcq-controls">
+    <label class="file-btn primary">
+      Upload image
+      <input id="file-input" type="file" accept="image/*" capture="environment" hidden />
+    </label>
+    <button id="btn-paste" class="ghost">Paste image</button>
+    <button id="btn-screenshot" class="ghost">Grab laptop screen</button>
+  </section>
+
+  <section class="panel preview-panel hidden" id="preview-panel">
+    <h2>Preview</h2>
+    <img id="preview-image" alt="Screenshot preview" />
+  </section>
+
+  <section class="panel">
+    <h2>Result</h2>
+    <article id="answer-card" class="card empty mcq-result-card">
+      <p class="placeholder">Question, options, and answer appear here — no explanation.</p>
+    </article>
+  </section>
+
+  <section class="panel tips">
+    <h2>How to use</h2>
+    <ul class="tip-list">
+      <li><strong>Phone (stealthiest):</strong> Photograph the exam screen, upload here — nothing shows on shared screen.</li>
+      <li><strong>Paste:</strong> Take a system screenshot (Print Screen), then tap Paste image.</li>
+      <li><strong>Grab laptop screen:</strong> Phone taps GRAB → laptop agent captures exam screen → answer here.</li>
+      <li><strong>Before exam (laptop once):</strong> Run <code>./start_laptop_agent.sh</code> and leave it running.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p id="connection-hint">Connecting...</p>
+  </footer>
+
+  <script src="/static/auth.js"></script>
+  <script src="/static/mcq.js"></script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>License Admin</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body class="admin-page">
+  <main class="admin-shell">
+    <header class="admin-header">
+      <div>
+        <h1>License Admin</h1>
+        <p class="subtitle">Generate, list, and revoke 8-letter keys</p>
+      </div>
+      <button id="btn-logout" class="ghost hidden">Logout</button>
+    </header>
+
+    <section id="login-panel" class="panel">
+      <h2>Admin login</h2>
+      <form id="admin-login-form" class="login-form">
+        <input id="admin-password" type="password" placeholder="Admin password" required />
+        <button type="submit" class="primary">Login</button>
+      </form>
+      <p id="admin-login-error" class="login-error hidden"></p>
+    </section>
+
+    <section id="admin-panel" class="hidden">
+      <section class="panel">
+        <h2>Generate keys</h2>
+        <form id="generate-form" class="admin-form">
+          <select id="plan">
+            <option value="24h">24h — 100 questions</option>
+            <option value="7d">7d — 500 questions</option>
+            <option value="30d">30d — 2000 questions</option>
+          </select>
+          <input id="count" type="number" min="1" max="100" value="1" />
+          <input id="email" type="email" placeholder="Customer email (optional)" />
+          <input id="notes" type="text" placeholder="Notes (optional)" />
+          <button type="submit" class="primary">Generate</button>
+        </form>
+        <pre id="generated-keys" class="code-block"></pre>
+      </section>
+
+      <section class="panel">
+        <div class="admin-toolbar">
+          <h2>Active licenses</h2>
+          <button id="btn-refresh" class="ghost">Refresh</button>
+        </div>
+        <div id="license-table" class="license-table"></div>
+      </section>
+    </section>
+  </main>
+
+  <script src="/static/admin.js"></script>
+</body>
+</html>

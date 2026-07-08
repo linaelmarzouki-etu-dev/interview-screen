@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Interview Companion</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Interview Companion</h1>
+      <p class="subtitle">View on phone or second monitor — never on shared screen</p>
+    </div>
+    <div id="status-pill" class="pill idle">Idle</div>
+  </header>
+
+  <section class="controls">
+    <button id="btn-start" class="primary">Start listening</button>
+    <button id="btn-stop" class="ghost" disabled>Stop</button>
+    <button id="btn-answer" class="ghost" disabled>Get answer</button>
+  </section>
+
+  <section class="panel">
+    <h2>Suggested answer</h2>
+    <article id="answer-card" class="card empty">
+      <p class="placeholder">Answers appear here when a question is detected.</p>
+    </article>
+  </section>
+
+  <section class="panel">
+    <h2>Live transcript</h2>
+    <ul id="transcript-list" class="transcript-list"></ul>
+  </section>
+
+  <footer>
+    <p id="connection-hint">Connecting...</p>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
