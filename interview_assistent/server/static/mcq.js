@@ -180,9 +180,10 @@ function connect() {
       setLicenseBadge(info);
       if (useRemoteGrab) {
         btnScreenshot.textContent = "Grab laptop screen";
-        connectionHint.textContent = info.agent_connected
-          ? "Laptop connected — tap Grab laptop screen during exam."
-          : "Laptop offline — run ./start_laptop_agent.sh on laptop before exam.";
+        const paired = info.your_laptop_connected ?? info.agent_connected;
+        connectionHint.textContent = paired
+          ? "Your laptop is paired — tap Grab laptop screen."
+          : "Your laptop offline — run start-laptop-client.sh YOURKEY on laptop (same key as this phone).";
       }
     } catch (_) {
       /* ignore */

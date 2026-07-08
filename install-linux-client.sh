@@ -5,14 +5,25 @@ set -euo pipefail
 REPO_URL="${REPO_URL:-https://github.com/linaelmarzouki-etu-dev/interview-screen.git}"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/interview-screen-client}"
 VPS_URL="${VPS_URL:-https://139-84-130-152.sslip.io}"
+LICENSE_KEY="${1:-${LICENSE_KEY:-}}"
 BRANCH="${BRANCH:-main}"
 
 echo "=== MCQ Laptop Client (Linux) ==="
 echo "Install dir: $INSTALL_DIR"
 echo "VPS URL:     $VPS_URL"
 echo
-echo "Note: Laptop does NOT need a license key."
-echo "      Open your license URL on PHONE only."
+echo "Same 8-letter key on laptop AND phone — pairs your devices only."
+echo
+
+if [[ -z "$LICENSE_KEY" ]]; then
+  read -rp "Enter your 8-letter license key: " LICENSE_KEY
+fi
+LICENSE_KEY="$(echo "$LICENSE_KEY" | tr '[:lower:]' '[:upper:]' | tr -cd 'A-Z' | head -c 8)"
+if [[ ${#LICENSE_KEY} -ne 8 ]]; then
+  echo "Error: license key must be exactly 8 letters A-Z"
+  exit 1
+fi
+echo "License key: $LICENSE_KEY"
 echo
 
 if ! command -v python3 >/dev/null 2>&1; then
@@ -57,6 +68,7 @@ print('Client dependencies OK')
 cat > client.env <<EOF
 VPS_URL=$VPS_URL
 SCREEN_MONITOR=1
+LICENSE_KEY=$LICENSE_KEY
 EOF
 
 chmod +x start-laptop-client.sh
@@ -64,11 +76,11 @@ chmod +x start-laptop-client.sh
 echo
 echo "Installed successfully."
 echo
-echo "=== Before exam (laptop — no key needed) ==="
+echo "=== Before exam (laptop) ==="
 echo "  cd $INSTALL_DIR"
-echo "  ./start-laptop-client.sh"
+echo "  ./start-laptop-client.sh $LICENSE_KEY"
 echo
-echo "=== During exam (phone — license key in URL) ==="
-echo "  ${VPS_URL%/}/u/YOURKEY"
+echo "=== During exam (phone — same key) ==="
+echo "  ${VPS_URL%/}/u/$LICENSE_KEY"
 echo "  Tap: Grab laptop screen"
 echo

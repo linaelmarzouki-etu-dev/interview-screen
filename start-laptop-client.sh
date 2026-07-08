@@ -8,16 +8,26 @@ if [[ -f client.env ]]; then
 fi
 
 if [[ ! -d .venv ]]; then
-  echo "Run ./install-linux-client.sh first"
+  echo "Run ./install-linux-client.sh YOURKEY first"
   exit 1
 fi
 
 export VPS_URL="${VPS_URL:-https://139-84-130-152.sslip.io}"
 export SCREEN_MONITOR="${SCREEN_MONITOR:-1}"
 
-echo "Connecting laptop to $VPS_URL ..."
-echo "Laptop: no license key needed — keep this window open."
-echo "Phone:  open https://139-84-130-152.sslip.io/u/YOURKEY then tap Grab laptop screen."
+LICENSE_KEY="${1:-${LICENSE_KEY:-}}"
+if [[ -z "$LICENSE_KEY" ]]; then
+  read -rp "Enter your 8-letter license key (same as phone): " LICENSE_KEY
+fi
+LICENSE_KEY="$(echo "$LICENSE_KEY" | tr '[:lower:]' '[:upper:]' | tr -cd 'A-Z' | head -c 8)"
+
+if [[ ${#LICENSE_KEY} -ne 8 ]]; then
+  echo "Error: license key must be exactly 8 letters A-Z"
+  exit 1
+fi
+
+echo "Laptop key: $LICENSE_KEY"
+echo "Phone URL:  ${VPS_URL%/}/u/${LICENSE_KEY}"
 echo
 
-exec .venv/bin/python laptop_agent.py --vps "$VPS_URL" --monitor "$SCREEN_MONITOR"
+exec .venv/bin/python laptop_agent.py --vps "$VPS_URL" --monitor "$SCREEN_MONITOR" --key "$LICENSE_KEY"

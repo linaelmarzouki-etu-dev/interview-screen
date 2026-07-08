@@ -308,6 +308,16 @@ class LicenseStore:
 
         return license_row, session_row
 
+    def lookup_by_key(self, raw_key: str) -> LicenseRecord | None:
+        if not is_valid_key_format(raw_key):
+            return None
+        key_hash = hash_key(normalize_key(raw_key), self.pepper)
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM licenses WHERE key_hash = ?", (key_hash,)
+            ).fetchone()
+        return self._row_to_license(row) if row else None
+
     def record_question(self, license_id: int) -> None:
         with self._connect() as conn:
             row = conn.execute(

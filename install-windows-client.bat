@@ -5,14 +5,18 @@ set "REPO_URL=https://github.com/linaelmarzouki-etu-dev/interview-screen.git"
 if not defined INSTALL_DIR set "INSTALL_DIR=%USERPROFILE%\interview-screen-client"
 if not defined VPS_URL set "VPS_URL=https://139-84-130-152.sslip.io"
 set "BRANCH=main"
+if not "%~1"=="" set "LICENSE_KEY=%~1"
 
 echo === MCQ Laptop Client (Windows) ===
 echo Install dir: %INSTALL_DIR%
 echo VPS URL:     %VPS_URL%
 echo.
-echo Note: Laptop does NOT need a license key.
-echo       Open your license URL on PHONE only.
+echo Same 8-letter key on laptop AND phone - pairs your devices only.
 echo.
+
+if not defined LICENSE_KEY (
+  set /p LICENSE_KEY="Enter your 8-letter license key: "
+)
 
 where python >nul 2>&1
 if errorlevel 1 (
@@ -43,15 +47,16 @@ call .venv\Scripts\pip install -r requirements-client.txt -q
 
 > client.env echo VPS_URL=%VPS_URL%
 >> client.env echo SCREEN_MONITOR=1
+>> client.env echo LICENSE_KEY=%LICENSE_KEY%
 
 echo.
 echo Installed successfully.
 echo.
 echo Before exam (run once on laptop, leave open):
 echo   cd /d %INSTALL_DIR%
-echo   start-laptop-client.bat
+echo   start-laptop-client.bat %LICENSE_KEY%
 echo.
-echo On phone, open your license URL:
-echo   %VPS_URL%/u/YOURKEY
+echo On phone, open:
+echo   %VPS_URL%/u/%LICENSE_KEY%
 echo.
 pause

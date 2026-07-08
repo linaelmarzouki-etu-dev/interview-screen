@@ -25,15 +25,17 @@
 
     <section class="panel">
       <h2>Phone (your license link)</h2>
-      <p class="muted">You receive a personal URL like:</p>
-      <pre class="code-block" id="sample-url">http://server:8765/u/ABCDEFGH</pre>
-      <p class="muted">Open it on your phone → auto login → tap Grab laptop screen.</p>
+      <p class="muted">Use the <strong>same key</strong> on laptop and phone:</p>
+      <pre class="code-block" id="sample-phone">https://server/u/ABCDEFGH  (phone)</pre>
+      <pre class="code-block" id="sample-laptop">./start-laptop-client.sh ABCDEFGH  (laptop)</pre>
+      <p class="muted">Only your laptop pairs with your phone — other users cannot connect.</p>
     </section>
   </main>
   <script>
     fetch("/api/info").then((r) => r.json()).then((info) => {
       const base = info.companion_url || location.origin;
-      document.getElementById("sample-url").textContent = `${base}/u/ABCDEFGH`;
+      document.getElementById("sample-phone").textContent = `${base}/u/ABCDEFGH`;
+      document.getElementById("sample-laptop").textContent = `./start-laptop-client.sh ABCDEFGH`;
     }).catch(() => {});
   </script>
 </body>

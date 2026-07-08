@@ -13,7 +13,7 @@ from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from interview_assistent.agent_hub import LaptopAgentHub
+from interview_assistent.agent_hub import DEFAULT_LICENSE_ID, LaptopAgentHub
 from interview_assistent.config import Settings
 from interview_assistent.events import EventBus
 from interview_assistent.license.auth import LicenseContext, build_license_dependency, extract_token
@@ -97,28 +97,41 @@ def create_app(
         scheme = request.url.scheme if request.url.scheme in {"http", "https"} else "http"
         return f"{scheme}://{host}"
 
+    def _license_from_agent_key(request: Request) -> LicenseContext | None:
+        agent_key = request.headers.get("x-license-key", "").strip()
+        if not agent_key:
+            return None
+        license_row = license_store.lookup_by_key(agent_key)
+        if license_row is None:
+            raise HTTPException(status_code=401, detail="Invalid license key on laptop.")
+        if not agent_hub.consume_pending_grab(license_row.id):
+            raise HTTPException(
+                status_code=401,
+                detail="Grab session expired. Tap Grab laptop screen on your phone again.",
+            )
+        try:
+            license_store.ensure_license_usable(license_row)
+        except ValueError as exc:
+            raise HTTPException(status_code=401, detail=str(exc)) from exc
+        return LicenseContext(license=license_row, via_agent=True)
+
     async def _resolve_mcq_license(
         request: Request,
         license_ctx: LicenseContext | None = Depends(require_license),
     ) -> LicenseContext | None:
         if license_ctx is not None:
             return license_ctx
+        agent_ctx = _license_from_agent_key(request)
+        if agent_ctx is not None:
+            return agent_ctx
         if not license_enabled:
+            if agent_hub.consume_pending_grab(DEFAULT_LICENSE_ID):
+                return None
             return None
-        license_id = agent_hub.consume_pending_grab()
-        if license_id is None:
-            raise HTTPException(
-                status_code=401,
-                detail="License required. Enter your 8-letter key.",
-            )
-        license_row = license_store.get_license_by_id(license_id)
-        if license_row is None:
-            raise HTTPException(status_code=401, detail="Grab session expired. Try again.")
-        try:
-            license_store.ensure_license_usable(license_row)
-        except ValueError as exc:
-            raise HTTPException(status_code=401, detail=str(exc)) from exc
-        return LicenseContext(license=license_row, via_agent=True)
+        raise HTTPException(
+            status_code=401,
+            detail="License required. Enter your 8-letter key on phone.",
+        )
 
     @app.get("/", response_class=HTMLResponse)
     async def index() -> FileResponse:
@@ -135,6 +148,24 @@ def create_app(
         if not is_valid_key_format(normalized):
             raise HTTPException(status_code=400, detail="Invalid license key format")
         return RedirectResponse(url=f"/login?key={normalized}", status_code=302)
+
+    @app.get("/laptop/{key}", response_class=HTMLResponse)
+    async def laptop_pairing_page(key: str, request: Request) -> HTMLResponse:
+        normalized = normalize_key(key)
+        if not is_valid_key_format(normalized):
+            raise HTTPException(status_code=400, detail="Invalid license key format")
+        base = _public_base(request)
+        return HTMLResponse(
+            f"""<!DOCTYPE html><html><head><meta charset="utf-8">
+            <title>Laptop setup</title></head><body style="font-family:sans-serif;padding:1.5rem">
+            <h1>Laptop setup</h1>
+            <p>License key: <strong>{normalized}</strong></p>
+            <p>Run on laptop (Linux):</p>
+            <pre>curl -fsSL https://raw.githubusercontent.com/linaelmarzouki-etu-dev/interview-screen/main/install-linux-client.sh | bash -s {normalized}
+~/interview-screen-client/start-laptop-client.sh {normalized}</pre>
+            <p>Phone URL (same key): <a href="{base}/u/{normalized}">{base}/u/{normalized}</a></p>
+            </body></html>"""
+        )
 
     @app.get("/download", response_class=HTMLResponse)
     async def download_page() -> FileResponse:
@@ -157,7 +188,9 @@ def create_app(
             "auto_answer": settings.auto_answer,
             "desktop_grab": settings.mcq_allow_desktop_grab,
             "remote_grab": not settings.mcq_allow_desktop_grab,
-            "agent_connected": agent_hub.is_connected(),
+            "agent_connected": agent_hub.is_connected(
+                license_ctx.license.id if license_ctx else None
+            ),
             "license_required": license_enabled,
         }
         if license_ctx is not None:
@@ -168,6 +201,9 @@ def create_app(
                     "plan": license_ctx.license.plan,
                     "license_expires_at": license_ctx.license.expires_at,
                     "questions_remaining": remaining,
+                    "your_laptop_connected": agent_hub.is_connected(
+                        license_ctx.license.id
+                    ),
                 }
             )
         else:
@@ -400,9 +436,10 @@ def create_app(
     ) -> dict[str, str]:
         if mcq_pipeline is None:
             raise HTTPException(status_code=404, detail="MCQ mode is not active")
-        license_id = license_ctx.license_id if license_ctx else None
+        if license_ctx is None:
+            raise HTTPException(status_code=401, detail="License required on phone.")
         try:
-            await agent_hub.request_grab(license_id=license_id)
+            await agent_hub.request_grab(license_id=license_ctx.license_id)
         except RuntimeError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
         await bus.set_status("thinking", "Laptop is capturing screen...")
@@ -410,14 +447,32 @@ def create_app(
 
     @app.websocket("/ws/agent")
     async def agent_endpoint(websocket: WebSocket) -> None:
-        await agent_hub.register(websocket)
+        license_id = DEFAULT_LICENSE_ID
+        if license_enabled:
+            raw_key = websocket.query_params.get("key", "").strip()
+            normalized = normalize_key(raw_key)
+            if not is_valid_key_format(normalized):
+                await websocket.close(code=4401, reason="License key required")
+                return
+            license_row = license_store.lookup_by_key(normalized)
+            if license_row is None:
+                await websocket.close(code=4401, reason="Invalid license key")
+                return
+            try:
+                license_store.ensure_license_usable(license_row)
+            except ValueError as exc:
+                await websocket.close(code=4401, reason=str(exc))
+                return
+            license_id = license_row.id
+
+        await agent_hub.register(websocket, license_id)
         try:
             while True:
                 await websocket.receive_text()
         except WebSocketDisconnect:
             pass
         finally:
-            await agent_hub.unregister(websocket)
+            await agent_hub.unregister(websocket, license_id)
 
     @app.websocket("/ws")
     async def websocket_endpoint(websocket: WebSocket) -> None:

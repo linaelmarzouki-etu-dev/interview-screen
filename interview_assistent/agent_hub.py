@@ -11,6 +11,7 @@ from fastapi import WebSocket
 logger = logging.getLogger(__name__)
 
 GRAB_WINDOW_SECONDS = 120
+DEFAULT_LICENSE_ID = 0
 
 
 @dataclass
@@ -20,54 +21,57 @@ class PendingGrab:
 
 
 class LaptopAgentHub:
-    """Tracks the laptop screen-capture agent connected to the VPS."""
+    """Tracks laptop agents per license — phone and laptop must share the same key."""
 
     def __init__(self) -> None:
-        self._socket: WebSocket | None = None
+        self._agents: dict[int, WebSocket] = {}
+        self._pending_grabs: dict[int, PendingGrab] = {}
         self._lock = asyncio.Lock()
-        self._pending_grab: PendingGrab | None = None
 
-    def is_connected(self) -> bool:
-        return self._socket is not None
+    def is_connected(self, license_id: int | None = None) -> bool:
+        if license_id is None:
+            return bool(self._agents)
+        return license_id in self._agents
 
-    async def register(self, websocket: WebSocket) -> None:
+    async def register(self, websocket: WebSocket, license_id: int) -> None:
         await websocket.accept()
         async with self._lock:
-            if self._socket is not None:
+            previous = self._agents.get(license_id)
+            if previous is not None and previous is not websocket:
                 try:
-                    await self._socket.close()
+                    await previous.close()
                 except Exception:
                     pass
-            self._socket = websocket
-        logger.info("Laptop agent connected")
+            self._agents[license_id] = websocket
+        logger.info("Laptop agent connected for license_id=%s", license_id)
 
-    async def unregister(self, websocket: WebSocket) -> None:
+    async def unregister(self, websocket: WebSocket, license_id: int) -> None:
         async with self._lock:
-            if self._socket is websocket:
-                self._socket = None
-        logger.info("Laptop agent disconnected")
+            if self._agents.get(license_id) is websocket:
+                del self._agents[license_id]
+        logger.info("Laptop agent disconnected for license_id=%s", license_id)
 
-    async def request_grab(self, license_id: int | None = None) -> None:
+    async def request_grab(self, license_id: int) -> None:
         async with self._lock:
-            socket = self._socket
-            if license_id is not None:
-                self._pending_grab = PendingGrab(
-                    license_id=license_id,
-                    expires_at=datetime.now(timezone.utc)
-                    + timedelta(seconds=GRAB_WINDOW_SECONDS),
-                )
+            socket = self._agents.get(license_id)
+            self._pending_grabs[license_id] = PendingGrab(
+                license_id=license_id,
+                expires_at=datetime.now(timezone.utc)
+                + timedelta(seconds=GRAB_WINDOW_SECONDS),
+            )
         if socket is None:
             raise RuntimeError(
-                "Laptop not connected. Before the exam, run on laptop: ./start_laptop_agent.sh"
+                "Your laptop is not connected with the same license key. "
+                "On laptop run: ./start-laptop-client.sh YOURKEY"
             )
         await socket.send_text(json.dumps({"type": "grab"}))
 
-    def consume_pending_grab(self) -> int | None:
-        pending = self._pending_grab
+    def consume_pending_grab(self, license_id: int) -> bool:
+        pending = self._pending_grabs.get(license_id)
         if pending is None:
-            return None
+            return False
         if datetime.now(timezone.utc) > pending.expires_at:
-            self._pending_grab = None
-            return None
-        self._pending_grab = None
-        return pending.license_id
+            self._pending_grabs.pop(license_id, None)
+            return False
+        self._pending_grabs.pop(license_id, None)
+        return True
