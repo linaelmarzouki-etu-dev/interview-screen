@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install laptop screen-capture client (Linux) — NO license key needed on laptop
+# Install laptop screen-capture client (Linux) — requires same 8-letter key as phone
 set -euo pipefail
 
 REPO_URL="${REPO_URL:-https://github.com/linaelmarzouki-etu-dev/interview-screen.git}"
@@ -8,6 +8,38 @@ VPS_URL="${VPS_URL:-https://139-84-130-152.sslip.io}"
 LICENSE_KEY="${1:-${LICENSE_KEY:-}}"
 BRANCH="${BRANCH:-main}"
 
+usage() {
+  cat <<'EOF'
+License key required (8 letters A-Z, same as phone URL).
+
+Examples:
+  curl -fsSL https://raw.githubusercontent.com/linaelmarzouki-etu-dev/interview-screen/main/install-linux-client.sh | bash -s ABCDEFGH
+
+  LICENSE_KEY=ABCDEFGH curl -fsSL https://raw.githubusercontent.com/linaelmarzouki-etu-dev/interview-screen/main/install-linux-client.sh | bash
+
+  bash install-linux-client.sh ABCDEFGH
+EOF
+}
+
+prompt_for_key() {
+  if [[ -n "$LICENSE_KEY" ]]; then
+    return
+  fi
+  if [[ -t 0 ]]; then
+    read -rp "Enter your 8-letter license key: " LICENSE_KEY
+  elif [[ -e /dev/tty ]]; then
+    read -rp "Enter your 8-letter license key: " LICENSE_KEY < /dev/tty
+  else
+    echo "ERROR: No license key provided."
+    usage
+    exit 1
+  fi
+}
+
+normalize_key() {
+  echo "$1" | tr '[:lower:]' '[:upper:]' | tr -cd 'A-Z' | head -c 8
+}
+
 echo "=== MCQ Laptop Client (Linux) ==="
 echo "Install dir: $INSTALL_DIR"
 echo "VPS URL:     $VPS_URL"
@@ -15,12 +47,11 @@ echo
 echo "Same 8-letter key on laptop AND phone — pairs your devices only."
 echo
 
-if [[ -z "$LICENSE_KEY" ]]; then
-  read -rp "Enter your 8-letter license key: " LICENSE_KEY
-fi
-LICENSE_KEY="$(echo "$LICENSE_KEY" | tr '[:lower:]' '[:upper:]' | tr -cd 'A-Z' | head -c 8)"
+prompt_for_key
+LICENSE_KEY="$(normalize_key "$LICENSE_KEY")"
 if [[ ${#LICENSE_KEY} -ne 8 ]]; then
   echo "Error: license key must be exactly 8 letters A-Z"
+  usage
   exit 1
 fi
 echo "License key: $LICENSE_KEY"
@@ -31,7 +62,6 @@ if ! command -v python3 >/dev/null 2>&1; then
   exit 1
 fi
 
-# Screenshot tools for Wayland/X11 (best-effort, ignore failures)
 if command -v apt-get >/dev/null 2>&1; then
   echo "Installing screenshot helpers (grim, gnome-screenshot) if available..."
   sudo apt-get update -qq
@@ -76,11 +106,10 @@ chmod +x start-laptop-client.sh
 echo
 echo "Installed successfully."
 echo
-echo "=== Before exam (laptop) ==="
+echo "=== Start laptop (before exam) ==="
 echo "  cd $INSTALL_DIR"
 echo "  ./start-laptop-client.sh $LICENSE_KEY"
 echo
-echo "=== During exam (phone — same key) ==="
+echo "=== Phone (same key) ==="
 echo "  ${VPS_URL%/}/u/$LICENSE_KEY"
-echo "  Tap: Grab laptop screen"
 echo

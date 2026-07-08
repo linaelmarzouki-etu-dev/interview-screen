@@ -16,11 +16,11 @@ The key is in the URL — no typing needed. Tap **Grab laptop screen**, **Upload
 
 ### 2. Laptop (once before exam)
 
-**Linux — one command install:**
+**Linux — replace `YOURKEY` with your 8-letter key:**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/linaelmarzouki-etu-dev/interview-screen/main/install-linux-client.sh | bash
-~/interview-screen-client/start-laptop-client.sh
+curl -fsSL https://raw.githubusercontent.com/linaelmarzouki-etu-dev/interview-screen/main/install-linux-client.sh | bash -s YOURKEY
+~/interview-screen-client/start-laptop-client.sh YOURKEY
 ```
 
 **Windows:**
