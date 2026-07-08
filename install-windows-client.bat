@@ -10,6 +10,9 @@ echo === MCQ Laptop Client (Windows) ===
 echo Install dir: %INSTALL_DIR%
 echo VPS URL:     %VPS_URL%
 echo.
+echo Note: Laptop does NOT need a license key.
+echo       Open your license URL on PHONE only.
+echo.
 
 where python >nul 2>&1
 if errorlevel 1 (

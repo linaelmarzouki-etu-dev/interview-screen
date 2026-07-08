@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install laptop screen-capture client (Linux)
+# Install laptop screen-capture client (Linux) — NO license key needed on laptop
 set -euo pipefail
 
 REPO_URL="${REPO_URL:-https://github.com/linaelmarzouki-etu-dev/interview-screen.git}"
@@ -11,10 +11,20 @@ echo "=== MCQ Laptop Client (Linux) ==="
 echo "Install dir: $INSTALL_DIR"
 echo "VPS URL:     $VPS_URL"
 echo
+echo "Note: Laptop does NOT need a license key."
+echo "      Open your license URL on PHONE only."
+echo
 
 if ! command -v python3 >/dev/null 2>&1; then
   echo "python3 is required. Install with: sudo apt install python3 python3-venv python3-pip"
   exit 1
+fi
+
+# Screenshot tools for Wayland/X11 (best-effort, ignore failures)
+if command -v apt-get >/dev/null 2>&1; then
+  echo "Installing screenshot helpers (grim, gnome-screenshot) if available..."
+  sudo apt-get update -qq
+  sudo apt-get install -y -qq grim gnome-screenshot scrot 2>/dev/null || true
 fi
 
 mkdir -p "$(dirname "$INSTALL_DIR")"
@@ -36,6 +46,14 @@ fi
 .venv/bin/pip install --upgrade pip -q
 .venv/bin/pip install -r requirements-client.txt -q
 
+.venv/bin/python -c "
+import numpy
+import httpx
+import websockets
+from interview_assistent.capture.screenshot import capture_primary_monitor
+print('Client dependencies OK')
+"
+
 cat > client.env <<EOF
 VPS_URL=$VPS_URL
 SCREEN_MONITOR=1
@@ -46,10 +64,11 @@ chmod +x start-laptop-client.sh
 echo
 echo "Installed successfully."
 echo
-echo "Before exam (run once on laptop, leave open):"
+echo "=== Before exam (laptop — no key needed) ==="
 echo "  cd $INSTALL_DIR"
 echo "  ./start-laptop-client.sh"
 echo
-echo "On phone, open your license URL:"
+echo "=== During exam (phone — license key in URL) ==="
 echo "  ${VPS_URL%/}/u/YOURKEY"
+echo "  Tap: Grab laptop screen"
 echo

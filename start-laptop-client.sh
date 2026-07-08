@@ -16,7 +16,8 @@ export VPS_URL="${VPS_URL:-https://139-84-130-152.sslip.io}"
 export SCREEN_MONITOR="${SCREEN_MONITOR:-1}"
 
 echo "Connecting laptop to $VPS_URL ..."
-echo "On phone: open your license URL and tap Grab laptop screen."
+echo "Laptop: no license key needed — keep this window open."
+echo "Phone:  open https://139-84-130-152.sslip.io/u/YOURKEY then tap Grab laptop screen."
 echo
 
 exec .venv/bin/python laptop_agent.py --vps "$VPS_URL" --monitor "$SCREEN_MONITOR"

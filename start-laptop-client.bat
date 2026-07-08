@@ -18,7 +18,8 @@ if not exist ".venv\Scripts\python.exe" (
 )
 
 echo Connecting laptop to %VPS_URL% ...
-echo On phone: open your license URL and tap Grab laptop screen.
+echo Laptop: no license key needed - keep this window open.
+echo Phone:  open https://139-84-130-152.sslip.io/u/YOURKEY then tap Grab laptop screen.
 echo.
 
 .venv\Scripts\python.exe laptop_agent.py --vps %VPS_URL% --monitor %SCREEN_MONITOR%
