@@ -56,7 +56,11 @@ echo Before exam (run once on laptop, leave open):
 echo   cd /d %INSTALL_DIR%
 echo   start-laptop-client.bat %LICENSE_KEY%
 echo.
-echo On phone, open:
+echo.
+echo Phone URL (same key):
 echo   %VPS_URL%/u/%LICENSE_KEY%
+echo.
+echo If install failed, run: install-windows-client.bat XXXXXXXX
+echo Replace XXXXXXXX with your real 8-letter key.
 echo.
 pause

@@ -12,12 +12,14 @@ usage() {
   cat <<'EOF'
 License key required (8 letters A-Z, same as phone URL).
 
+Replace XXXXXXXX with your real 8-letter key (e.g. ZLHUFEAZ).
+
 Examples:
-  curl -fsSL https://raw.githubusercontent.com/linaelmarzouki-etu-dev/interview-screen/main/install-linux-client.sh | bash -s ABCDEFGH
+  curl -fsSL .../install-linux-client.sh | bash -s ZLHUFEAZ
 
-  LICENSE_KEY=ABCDEFGH curl -fsSL https://raw.githubusercontent.com/linaelmarzouki-etu-dev/interview-screen/main/install-linux-client.sh | bash
+  LICENSE_KEY=ZLHUFEAZ curl -fsSL .../install-linux-client.sh | bash
 
-  bash install-linux-client.sh ABCDEFGH
+  bash install-linux-client.sh ZLHUFEAZ
 EOF
 }
 

@@ -4,8 +4,9 @@ set -euo pipefail
 
 KEY="${1:-}"
 if [[ -z "$KEY" ]]; then
-  echo "Usage: bash client.sh ZLHUFEAZ"
-  echo "       (replace ZLHUFEAZ with your real 8-letter key)"
+  echo "Usage: bash client.sh XXXXXXXX"
+  echo "       Replace XXXXXXXX with your real 8-letter key (e.g. ZLHUFEAZ)"
+  echo "       Do NOT type the letters XXXXXXXX literally unless that is your key."
   exit 1
 fi
 
