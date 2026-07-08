@@ -12,7 +12,7 @@ if [[ ! -d .venv ]]; then
   exit 1
 fi
 
-export VPS_URL="${VPS_URL:-http://139.84.130.152:8765}"
+export VPS_URL="${VPS_URL:-https://139-84-130-152.sslip.io}"
 export SCREEN_MONITOR="${SCREEN_MONITOR:-1}"
 
 echo "Connecting laptop to $VPS_URL ..."

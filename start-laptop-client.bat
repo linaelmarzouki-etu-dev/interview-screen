@@ -9,7 +9,7 @@ if exist client.env (
   )
 )
 
-if not defined VPS_URL set "VPS_URL=http://139.84.130.152:8765"
+if not defined VPS_URL set "VPS_URL=https://139-84-130-152.sslip.io"
 if not defined SCREEN_MONITOR set "SCREEN_MONITOR=1"
 
 if not exist ".venv\Scripts\python.exe" (

@@ -9,7 +9,7 @@ Screenshot MCQ solver with multi-model verification. Phone + laptop workflow wit
 Open your personal link (you receive this after purchase):
 
 ```
-http://YOUR-SERVER:8765/u/ABCDEFGH
+https://139-84-130-152.sslip.io/u/ABCDEFGH
 ```
 
 The key is in the URL — no typing needed. Tap **Grab laptop screen**, **Upload**, or **Paste**.
@@ -29,13 +29,13 @@ curl -fsSL https://raw.githubusercontent.com/linaelmarzouki-etu-dev/interview-sc
 2. Extract, run `install-windows-client.bat`
 3. Run `start-laptop-client.bat` and leave it open
 
-Client download page: `http://YOUR-SERVER:8765/download`
+Client download page: `https://139-84-130-152.sslip.io/download`
 
 ## For seller (you)
 
 ### Generate license + share URL
 
-Admin panel: `http://YOUR-SERVER:8765/admin`
+Admin panel: `https://139-84-130-152.sslip.io/admin`
 
 Or CLI:
 
@@ -45,7 +45,7 @@ python admin_license.py generate --plan 24h --email buyer@email.com
 
 Send customer:
 
-- **Share URL:** `http://YOUR-SERVER:8765/u/XXXXXXXX`
+- **Share URL:** `https://139-84-130-152.sslip.io/u/XXXXXXXX`
 - **Linux client:** install command above
 - **Windows client:** ZIP link above
 
@@ -70,6 +70,7 @@ python3 deploy_remote.py
 
 Copy `.env.example` to `.env`. Key settings:
 
-- `PUBLIC_URL` — used for share links (e.g. `http://139.84.130.152:8765`)
+- `PUBLIC_URL` — HTTPS share links via sslip.io (e.g. `https://139-84-130-152.sslip.io`)
+- `SSLIP_HOST` — hostname derived from VPS IP (`139.84.130.152` → `139-84-130-152.sslip.io`)
 - `LICENSE_REQUIRED=true`
 - `LICENSE_ADMIN_PASSWORD` — admin panel at `/admin`

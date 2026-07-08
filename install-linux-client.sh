@@ -4,7 +4,7 @@ set -euo pipefail
 
 REPO_URL="${REPO_URL:-https://github.com/linaelmarzouki-etu-dev/interview-screen.git}"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/interview-screen-client}"
-VPS_URL="${VPS_URL:-http://139.84.130.152:8765}"
+VPS_URL="${VPS_URL:-https://139-84-130-152.sslip.io}"
 BRANCH="${BRANCH:-main}"
 
 echo "=== MCQ Laptop Client (Linux) ==="

@@ -124,6 +124,8 @@ def main() -> None:
         print(f"Platform: {platform}")
         print("Stealth mode: open companion on phone or second monitor (not shared screen)")
         print(f"  Local:     http://127.0.0.1:{settings.port}")
+        if settings.public_url:
+            print(f"  Public:    {settings.public_url}")
         print(f"  Companion: http://{ip}:{settings.port}")
         print("  Input:     upload screenshot, paste image, or grab desktop screen")
         print(f"  OCR:       {settings.vision_model}")
@@ -138,6 +140,8 @@ def main() -> None:
         print(f"Platform: {platform}")
         print("Stealth mode: open companion on phone or second monitor (not shared screen)")
         print(f"  Local:     http://127.0.0.1:{settings.port}")
+        if settings.public_url:
+            print(f"  Public:    {settings.public_url}")
         print(f"  Companion: http://{ip}:{settings.port}")
         if sys.platform == "win32":
             print("  Audio:     WASAPI loopback (system audio from speakers/headphones)")

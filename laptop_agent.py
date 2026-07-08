@@ -17,7 +17,7 @@ sys.path.insert(0, str(ROOT))
 
 from interview_assistent.capture.screenshot import capture_primary_monitor  # noqa: E402
 
-DEFAULT_VPS = os.getenv("VPS_URL", "http://139.84.130.152:8765")
+DEFAULT_VPS = os.getenv("VPS_URL", "https://139-84-130-152.sslip.io")
 DEFAULT_MONITOR = os.getenv("SCREEN_MONITOR", "1")
 
 

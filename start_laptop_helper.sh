@@ -7,7 +7,7 @@ if [[ ! -d .venv ]]; then
   .venv/bin/pip install -r requirements.txt -q
 fi
 
-export VPS_URL="${VPS_URL:-http://139.84.130.152:8765}"
+export VPS_URL="${VPS_URL:-https://139-84-130-152.sslip.io}"
 export SCREEN_MONITOR="${SCREEN_MONITOR:-1}"
 export HELPER_PORT="${HELPER_PORT:-9876}"
 

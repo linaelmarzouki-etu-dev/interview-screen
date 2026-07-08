@@ -24,7 +24,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--vps",
-        default=os.getenv("VPS_URL", "http://139.84.130.152:8765"),
+        default=os.getenv("VPS_URL", "https://139-84-130-152.sslip.io"),
         help="VPS companion base URL",
     )
     parser.add_argument(

@@ -3,7 +3,7 @@ setlocal EnableExtensions
 
 set "REPO_URL=https://github.com/linaelmarzouki-etu-dev/interview-screen.git"
 if not defined INSTALL_DIR set "INSTALL_DIR=%USERPROFILE%\interview-screen-client"
-if not defined VPS_URL set "VPS_URL=http://139.84.130.152:8765"
+if not defined VPS_URL set "VPS_URL=https://139-84-130-152.sslip.io"
 set "BRANCH=main"
 
 echo === MCQ Laptop Client (Windows) ===

@@ -151,7 +151,8 @@ def create_app(
         payload: dict[str, str | int | bool | None] = {
             "mode": settings.mode,
             "role": settings.role,
-            "companion_url": f"http://{local_ip()}:{settings.port}",
+            "companion_url": settings.public_url or f"http://{local_ip()}:{settings.port}",
+            "public_url": settings.public_url or "",
             "local_url": f"http://127.0.0.1:{settings.port}",
             "auto_answer": settings.auto_answer,
             "desktop_grab": settings.mcq_allow_desktop_grab,

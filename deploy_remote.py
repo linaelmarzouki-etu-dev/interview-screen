@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deploy MCQ assistant to a remote Linux VPS."""
+"""Deploy MCQ assistant to a remote Linux VPS with sslip.io HTTPS."""
 from __future__ import annotations
 
 import io
@@ -11,6 +11,10 @@ from pathlib import Path
 import paramiko
 
 ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))
+
+from interview_assistent.sslip import ip_to_sslip_hostname  # noqa: E402
+
 REMOTE_DIR = "/opt/interview-assistent"
 SERVICE_NAME = "interview-assistent"
 
@@ -69,16 +73,31 @@ def main() -> int:
         license_admin = secrets.token_urlsafe(16)
         print(f"Generated LICENSE_ADMIN_PASSWORD={license_admin}")
 
+    sslip_enable = os.environ.get("SSLIP_ENABLE", "true").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+    sslip_host = os.environ.get("SSLIP_HOST", "").strip() or ip_to_sslip_hostname(host)
+    certbot_email = os.environ.get("CERTBOT_EMAIL", "admin@sslip.io").strip()
+    public_url = os.environ.get("PUBLIC_URL", "").strip() or (
+        f"https://{sslip_host}" if sslip_enable else f"http://{host}:8765"
+    )
+    app_host = "127.0.0.1" if sslip_enable else "0.0.0.0"
+
     print(f"Connecting to {user}@{host}...")
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(host, username=user, password=password, timeout=30)
 
     print("Installing system packages...")
+    packages = "python3 python3-venv python3-pip"
+    if sslip_enable:
+        packages += " nginx certbot python3-certbot-nginx"
     code, out, err = run(
         ssh,
         "export DEBIAN_FRONTEND=noninteractive; "
-        "apt-get update -qq && apt-get install -y -qq python3 python3-venv python3-pip",
+        f"apt-get update -qq && apt-get install -y -qq {packages}",
     )
     if code != 0:
         print(out, err)
@@ -101,7 +120,7 @@ MCQ_REASONING_MODELS=llama-3.3-70b-versatile,openai/gpt-oss-120b,qwen/qwen3-32b
 MCQ_TWO_STEP=true
 MCQ_ANSWER_ONLY=true
 MCQ_ALLOW_DESKTOP_GRAB=false
-HOST=0.0.0.0
+HOST={app_host}
 PORT=8765
 ROLE=Software Engineer
 EXTRA_CONTEXT=Focus on concise MCQ answers
@@ -110,7 +129,41 @@ LICENSE_DB_PATH=data/licenses.db
 LICENSE_PEPPER={license_pepper}
 LICENSE_ADMIN_PASSWORD={license_admin}
 GUMROAD_WEBHOOK_SECRET=
-PUBLIC_URL=http://{host}:8765
+PUBLIC_URL={public_url}
+SSLIP_HOST={sslip_host}
+"""
+
+    nginx_block = ""
+    if sslip_enable:
+        nginx_block = f"""
+cat > /etc/nginx/sites-available/{SERVICE_NAME} << 'NGINXEOF'
+server {{
+    listen 80;
+    server_name {sslip_host};
+
+    location / {{
+        proxy_pass http://127.0.0.1:8765;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 86400;
+    }}
+}}
+NGINXEOF
+ln -sf /etc/nginx/sites-available/{SERVICE_NAME} /etc/nginx/sites-enabled/{SERVICE_NAME}
+rm -f /etc/nginx/sites-enabled/default
+nginx -t
+systemctl enable nginx
+systemctl restart nginx
+ufw allow 80/tcp 2>/dev/null || true
+ufw allow 443/tcp 2>/dev/null || true
+iptables -I INPUT -p tcp --dport 80 -j ACCEPT 2>/dev/null || true
+iptables -I INPUT -p tcp --dport 443 -j ACCEPT 2>/dev/null || true
+certbot --nginx -d {sslip_host} --non-interactive --agree-tos -m {certbot_email} --redirect || echo "Certbot: will retry on next deploy if rate-limited"
 """
 
     setup_script = f"""set -e
@@ -145,8 +198,7 @@ UNITEOF
 systemctl daemon-reload
 systemctl enable {SERVICE_NAME}
 systemctl restart {SERVICE_NAME}
-ufw allow 8765/tcp 2>/dev/null || true
-iptables -I INPUT -p tcp --dport 8765 -j ACCEPT 2>/dev/null || true
+{nginx_block}
 sleep 2
 systemctl is-active {SERVICE_NAME}
 curl -s -o /dev/null -w '%{{http_code}}' http://127.0.0.1:8765/ || true
@@ -158,12 +210,24 @@ curl -s -o /dev/null -w '%{{http_code}}' http://127.0.0.1:8765/ || true
     if err:
         print(err, file=sys.stderr)
     if code != 0:
-        run(ssh, f"journalctl -u {SERVICE_NAME} -n 20 --no-pager")
         _, logs, _ = run(ssh, f"journalctl -u {SERVICE_NAME} -n 20 --no-pager")
         print(logs)
         return code
 
-    print(f"\nDeployed! Open: http://{host}:8765")
+    if sslip_enable:
+        _, https_code, _ = run(
+            ssh,
+            f"curl -s -o /dev/null -w '%{{http_code}}' https://{sslip_host}/ || true",
+        )
+        print(f"HTTPS check: {https_code.strip()}")
+
+    print(f"\nDeployed!")
+    print(f"  Public URL:  {public_url}")
+    if sslip_enable:
+        print(f"  sslip.io:    https://{sslip_host}")
+        print(f"  License URL: {public_url}/u/YOURKEY")
+    else:
+        print(f"  Open:        http://{host}:8765")
     ssh.close()
     return 0
 
